@@ -24,13 +24,19 @@ def text_to_sequence(text, cleaner_names, ):
       List of integers corresponding to the symbols in the text
   '''
   sequence = []
-
+  print("a1")
   clean_text = _clean_text(text, cleaner_names)
+  print("a2", clean_text)
   for symbol in clean_text:
+    print("a3")
     if symbol not in _symbol_to_id.keys():
+      print("a4")
       coutinue
+    print("a5")
     symbol_id = _symbol_to_id[symbol]
+    print("a6")
     sequence += [symbol_id]
+    print("a7")
   return sequence
 
 
