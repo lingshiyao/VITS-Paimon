@@ -61,6 +61,21 @@ def get_paimon_task_left():
         return "no token", 500
     return str(taskQuene.get_index_not_running(token))
 
+@app.route('/getPaimonTaskLeftSee', methods=['POST'])
+def get_paimon_task_left_see():
+    token = request.headers.get('Authorization')
+    if token is None:
+        return "no token", 500
+    return Response(event_stream_paimon(token), mimetype='text/event-stream')
+
+def event_stream_paimon(token):
+    while True:
+        data = taskQuene.get_index_not_running(token) # 获取下一条数据
+        print("data:", data)
+        yield 'data: %s\n\n' % str(data) # 发送 SSE 消息
+        if data == -1:
+            break
+        time.sleep(1)  # 延迟 1 秒
 
 # -1 not found
 @app.route('/getPaimonVoiceFile', methods=['POST'])
@@ -79,4 +94,19 @@ def get_paimon_voice_file():
 if __name__ == '__main__':
     from waitress import serve
 
-    serve(app, host="0.0.0.0", port=5004)
+    # serve(app, host="0.0.0.0", port=5004)
+    serve(app,
+          host=os.getenv('HOST', '0.0.0.0'),
+          port=int(os.getenv('PORT', '5004')),
+          # 是否在出现异常时，将异常的跟踪信息暴露到客户端。默认为True。
+          expose_tracebacks=True,
+          # Waitress 服务器的连接数上限。默认为 "1000"。
+          connection_limit=os.getenv('CONNECTION_LIMIT', '2000'),
+          # 服务器使用的线程数。默认为 "50"。
+          threads=os.getenv('THREADS', '100'),
+          # Waitress 服务器使用的通道超时时间。默认为 "10" 秒。
+          channel_timeout=os.getenv('CHANNEL_TIMEOUT', '20'),
+          # Waitress 服务器进行清理的间隔时间。默认为 "30" 秒。
+          cleanup_interval=os.getenv('CLEANUP_INTERVAL', '30'),
+          # 服务器的连接队列长度。默认为"2048"。
+          backlog=os.getenv('BACKLOG', '2048'))
