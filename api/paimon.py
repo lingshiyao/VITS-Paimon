@@ -8,6 +8,7 @@ from api.block_runner.base import Base
 from models import SynthesizerTrn
 from text import text_to_sequence
 from text.symbols import symbols
+from zfoutils import ZfoUtils
 
 
 class Paimon(Base):
@@ -37,17 +38,20 @@ class Paimon(Base):
         print(1.5, text_norm)
         return text_norm
 
-    def gen(self, text, token):
+    def gen(self, text, token, need_cache):
         if self.lock:
             return None
         self.lock = True
-        result = self._gen(text, token)
+        result = self._gen(text, token, need_cache)
         self.lock = False
         return result
 
-    def _gen(self, text, token):
+    def _gen(self, text, token, need_cache):
         length_scale = 1
-        audio_path = AppConstance.OUT_PUT_PATH + token + '.wav'
+        if need_cache:
+            audio_path = AppConstance.OUT_PUT_PATH + ZfoUtils.md5(text) + '.wav'
+        else:
+            audio_path = AppConstance.OUT_PUT_PATH + token + '.wav'
         print(1)
         stn_tst = self.get_text(text)
         print(2)
